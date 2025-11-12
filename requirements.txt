@@ -1,6 +1,6 @@
-streamlit
-opencv-python
+streamlit>=1.22
+opencv-python-headless
 mediapipe
 pillow
-streamlit-drawable-canvas
+streamlit-drawable-canvas>=0.10
 numpy
