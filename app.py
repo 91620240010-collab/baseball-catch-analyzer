@@ -1,7 +1,3 @@
-# ============================================
-# ⚾ 捕球姿勢解析ツール（捕球真下原点版）
-# ============================================
-
 import streamlit as st
 import cv2
 import tempfile
@@ -11,7 +7,7 @@ from PIL import Image
 from streamlit_drawable_canvas import st_canvas
 
 st.set_page_config(page_title="捕球姿勢解析ツール", layout="wide")
-st.title("🧤 捕球姿勢解析ツール（捕球真下原点版）")
+st.title("🧤 捕球姿勢解析ツール（捕球真下原点版・安定版）")
 
 # ----------------------------
 # 1️⃣ 動画アップロード
@@ -60,7 +56,7 @@ if video_file is not None:
         # ----------------------------
         # 3️⃣ 打球位置タップ
         # ----------------------------
-        if st.session_state["ball_frame"] == frame_num and st.session_state["ball_xy"] is None:
+        if st.session_state["ball_frame"] == frame_num and st.session_state.get("ball_xy") is None:
             st.info("👇 ボール位置をタップしてください")
             canvas_result = st_canvas(
                 fill_color="",
@@ -71,7 +67,7 @@ if video_file is not None:
                 height=frame.shape[0],
                 width=frame.shape[1],
                 drawing_mode="point",
-                key="canvas_ball"
+                key=f"canvas_ball_{frame_num}"  # フレーム番号で key を分ける
             )
             if canvas_result.json_data is not None:
                 objects = canvas_result.json_data["objects"]
@@ -83,7 +79,7 @@ if video_file is not None:
         # ----------------------------
         # 4️⃣ 捕球位置タップ
         # ----------------------------
-        if st.session_state["catch_frame"] == frame_num and st.session_state["catch_xy"] is None:
+        if st.session_state["catch_frame"] == frame_num and st.session_state.get("catch_xy") is None:
             st.info("👇 捕球位置をタップしてください")
             canvas_result = st_canvas(
                 fill_color="",
@@ -94,7 +90,7 @@ if video_file is not None:
                 height=frame.shape[0],
                 width=frame.shape[1],
                 drawing_mode="point",
-                key="canvas_catch"
+                key=f"canvas_catch_{frame_num}"  # フレーム番号で key を分ける
             )
             if canvas_result.json_data is not None:
                 objects = canvas_result.json_data["objects"]
@@ -107,12 +103,11 @@ if video_file is not None:
         # 5️⃣ 解析ボタン
         # ----------------------------
         if st.button("📊 捕球姿勢を解析"):
-            if st.session_state["ball_xy"] is None or st.session_state["catch_xy"] is None:
+            if st.session_state.get("ball_xy") is None or st.session_state.get("catch_xy") is None:
                 st.error("⚠️ 打球・捕球の座標をすべて指定してください")
             else:
                 st.info("解析中... ⏳")
 
-                # 捕球フレーム取得
                 cap.set(cv2.CAP_PROP_POS_FRAMES, st.session_state["catch_frame"])
                 _, frame_catch = cap.read()
                 frame_catch_rgb = cv2.cvtColor(frame_catch, cv2.COLOR_BGR2RGB)
@@ -128,11 +123,10 @@ if video_file is not None:
                     landmarks = results.pose_landmarks.landmark
                     lw = landmarks[15]  # 左手首
 
-                    # ---- 足首平均Yを地面として原点設定 ----
+                    # 足首平均Yを地面として原点
                     foot_y = (landmarks[27].y + landmarks[28].y) / 2
                     origin = np.array([lw.x, foot_y, lw.z])
 
-                    # ---- 実測値入力と相対座標計算 ----
                     height_m = st.number_input("👤 身長 [m]", 1.0, 2.5, 1.75)
                     coords = []
                     for i, lm in enumerate(landmarks):
@@ -144,7 +138,7 @@ if video_file is not None:
                     for i, x, y, z in coords:
                         st.text(f"ID {i:02d}: X={x:.3f} m, Y={y:.3f} m, Z={z:.3f} m")
 
-                    # ---- 可視化 ----
+                    # 可視化
                     annotated = frame_catch_rgb.copy()
                     h, w, _ = annotated.shape
                     for lm in landmarks:
