@@ -67,7 +67,7 @@ if video_file is not None:
                 height=frame.shape[0],
                 width=frame.shape[1],
                 drawing_mode="point",
-                key=f"canvas_ball_{frame_num}"  # フレーム番号で key を分ける
+                key=f"canvas_ball_{frame_num}"
             )
             if canvas_result.json_data is not None:
                 objects = canvas_result.json_data["objects"]
@@ -90,7 +90,7 @@ if video_file is not None:
                 height=frame.shape[0],
                 width=frame.shape[1],
                 drawing_mode="point",
-                key=f"canvas_catch_{frame_num}"  # フレーム番号で key を分ける
+                key=f"canvas_catch_{frame_num}"
             )
             if canvas_result.json_data is not None:
                 objects = canvas_result.json_data["objects"]
